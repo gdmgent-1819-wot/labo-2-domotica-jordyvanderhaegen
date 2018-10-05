@@ -14,26 +14,45 @@
 
 <body>
   <div class="container">
-    <h1 class="mb-3 mt-5">Authenticate.</h1>
-    <form>
-      <div class="form-group">
-        <label for="exampleInputEmail1">Email address</label>
-        <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email">
-        <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
-      </div>
-      <div class="form-group">
-        <label for="exampleInputPassword1">Password</label>
-        <input type="password" class="form-control" id="password" placeholder="Password">
-      </div>
-      <button type="submit" class="btn btn-primary" id="sign-up">Sign up</button>
-      <button type="submit" class="btn btn-primary" id="sign-in">Sign in</button>
+    <div class="auth-container">
+      <h1 class="mb-3 mt-5">Authenticate.</h1>
+      <form>
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email">
+          <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Password</label>
+          <input type="password" class="form-control" id="password" placeholder="Password">
+        </div>
+        <button type="submit" class="btn btn-primary" id="sign-up">Sign up</button>
+        <button type="submit" class="btn btn-primary" id="sign-in">Sign in</button>
+        <button type="submit" class="btn btn-primary" id="reset">Reset</button>
+      </form>
+    </div>
+    <div class="actions-container">
+      <h2 class="mt-3 mb-2">Lights</h2>
+      <button class="btn btn-warning" id="room_1__light_1">Light 1 toggle</button>
+      <button class="btn btn-warning" id="room_2__light_1">Light 2 toggle</button>
+      <button class="btn btn-warning" id="room_3__light_1">Light 3 toggle</button>
+      <button class="btn btn-warning" id="room_4__light_1">Light 4 toggle</button>
+      <h2 class="mt-3 mb-2">Outlets</h2>
+      <button class="btn btn-primary" id="room_1__outlet_1">Outlet 1 toggle</button>
+      <button class="btn btn-primary" id="room_2__outlet_1">Outlet 2 toggle</button>
+      <button class="btn btn-primary" id="room_3__outlet_1">Outlet 3 toggle</button>
+      <button class="btn btn-primary" id="room_4__outlet_1">Outlet 4 toggle</button>
+      <h2 class="mt-3 mb-2">Door</h2>
+      <button class="btn btn-success" id="room_3__door_1">Door 1 toggle</button>
+      <button class="btn btn-success" id="room_4__door_1">Door 2 toggle</button>
       <button type="submit" class="btn btn-primary" id="sign-out">Sign out</button>
-      <button type="submit" class="btn btn-primary" id="reset">Reset</button>
-    </form>
+    </div>
   </div>
+
   <div class="grid__wrapper mt-3">
 
   </div>
+
   <script src="./assets/js/app.js"></script>
 </body>
 

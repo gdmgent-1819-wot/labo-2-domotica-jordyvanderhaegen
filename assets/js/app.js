@@ -1,80 +1,101 @@
 (function () {
 
-  /* Initialize firebase */
+  /**
+   * Initialize firebase
+   */
   let config = {
     apiKey: "AIzaSyBlFJVRhkxDSUCRCZatc_d9mbShWfr9Xug", databaseURL: "https://wot-1819-85183.firebaseio.com",
   }
   firebase.initializeApp(config);
 
-  /* Global variables */
+  /**
+   * Global variables
+   */
   const sign_up = document.getElementById('sign-up');
   const sign_in = document.getElementById('sign-in');
   const sign_out = document.getElementById('sign-out');
   const reset = document.getElementById('reset');
+  const room_1__light_1 = document.getElementById('room_1__light_1');
+  const room_2__light_1 = document.getElementById('room_2__light_1');
+  const room_3__light_1 = document.getElementById('room_3__light_1');
+  const room_4__light_1 = document.getElementById('room_4__light_1');
+  const room_1__outlet_1 = document.getElementById('room_1__outlet_1');
+  const room_2__outlet_1 = document.getElementById('room_2__outlet_1');
+  const room_3__outlet_1 = document.getElementById('room_3__outlet_1');
+  const room_4__outlet_1 = document.getElementById('room_4__outlet_1');
+  const room_3__door_1 = document.getElementById('room_3__door_1');
+  const room_4__door_1 = document.getElementById('room_4__door_1');
   const email = document.getElementById('email');
-  const grid = document.querySelector('.grid__wrapper');
   const password = document.getElementById('password');
+  const grid = document.querySelector('.grid__wrapper');
+  const auth_container = document.querySelector('.auth-container');
+  const actions_container = document.querySelector('.actions-container');
+  let patternArr = [];
 
-
+  /**
+   * Clears every child in the grid
+   */
   function clearGrid() {
     while (grid.firstChild) {
       grid.removeChild(grid.firstChild);
     }
   }
+  /**
+   * Changes the color of an element depending on the current state.
+   * @param {Number} index 
+   * @returns Pattern Array
+   */
+  function toggleElement(index) {
+    const element = patternArr[index];
+    const toggleValue = (value) => {
+      if (value === 255) { return 128; }
+      else if (value === 128) { return 255; }
+      else { return 0; }
+    }
+    let new_element = element.map(toggleValue);
+    patternArr[index] = new_element;
+    return patternArr;
+  }
 
+  /**
+   * Changes the color of multiple elements depending on the current state.
+   * @param {Array<Number>} index 
+   */
+  function toggleDoorElement(index) {
+    index.forEach(element => {
+      const el = patternArr[element];
+      let p = el.findIndex(x => x === 255);
+      if (p === 1) { el[0] = 255; el[1] = 0 }
+      else if (p === 0) { el[0] = 0; el[1] = 255 }
+      patternArr[element] = el;
+    });
+    return patternArr;
+  }
+
+  /**
+   * Adds node elements to the grid.
+   * Assigns the right colors retrieved from firebase.
+   * @param {Array<Array<Number>>} array 
+   */
   function drawElements(array) {
     clearGrid();
     let index = 0;
-    array.forEach((letter) => {
-      const new_elem = document.createElement('div');
-      if (letter === 'dy') { new_elem.classList.add('grid__color--dy'); new_elem.setAttribute('data-val', 'dy'); }
-      if (letter === 'ly') { new_elem.classList.add('grid__color--ly'); new_elem.setAttribute('data-val', 'ly'); }
-      if (letter === 'db') { new_elem.classList.add('grid__color--db'); new_elem.setAttribute('data-val', 'db'); }
-      if (letter === 'lb') { new_elem.classList.add('grid__color--lb'); new_elem.setAttribute('data-val', 'lb'); }
-      if (letter === 'dg') { new_elem.classList.add('grid__color--dg'); new_elem.setAttribute('data-val', 'dg'); }
-      if (letter === 'lg') { new_elem.classList.add('grid__color--lg'); new_elem.setAttribute('data-val', 'lg'); }
-      if (letter === 'dr') { new_elem.classList.add('grid__color--dr'); new_elem.setAttribute('data-val', 'dr'); }
-      if (letter === 'lr') { new_elem.classList.add('grid__color--lr'); new_elem.setAttribute('data-val', 'lr'); }
-      if (letter === 'e') { new_elem.classList.add('grid__color--e'); new_elem.setAttribute('data-val', 'e') }
-      new_elem.setAttribute('data-id', index);
-      new_elem.classList.add('grid__item');
-      new_elem.addEventListener('click', () => {
-        let pattern = GetGridAsArray();
-        let dv = new_elem.getAttribute('data-val');
-        const di = parseInt(new_elem.getAttribute('data-id'));
-        let backDoorArr = [47, 55, 63];
-        let frontDoorArr = [40, 48, 56];
-        let pv = '';
-        if (dv.substring(0, 1) === 'd') {
-          pv = 'l'
-        } else if (dv.substring(0, 1) === 'l') {
-          pv = 'd'
-        } else {
-          pv = 'e'
-        }
-        if (di === 47 || di === 55 || di === 63) {
-          backDoorArr.forEach((id) => {
-            pattern[id] = pv + dv.substring(1, 2);
-          });
-        } else if (di === 40 || di === 48 || di === 56) {
-          frontDoorArr.forEach((id) => {
-            pattern[id] = pv + dv.substring(1, 2);
-          })
-        } else {
-          pattern[parseInt(new_elem.getAttribute('data-id'))] = pv + dv.substring(1, 2);
-        }
-        console.log(pattern);
-        PushToFirebase(pattern);
-      });
-      grid.appendChild(new_elem);
-      index++;
+    array.forEach((colorArray) => {
+      const new_element = document.createElement('div');
+      new_element.style.backgroundColor = `rgb(${colorArray[0]},${colorArray[1]},${colorArray[2]})`;
+      new_element.classList.add('grid__item');
+      grid.appendChild(new_element);
     });
   }
 
+  /**
+   * Pushes the global patternArray to the current users' reference.
+   * @param {Array<Array<Number>>} pattern 
+   */
   function PushToFirebase(pattern) {
     const user = firebase.auth().currentUser;
     if (user) {
-      const ref = firebase.database().ref(`domotica/${user.uid}`);
+      const ref = firebase.database().ref(`domotica/${user.uid}/pattern`);
       const promise = ref.set(pattern);
       promise.then(e => {
         console.log('Succesfully inserted data');
@@ -87,31 +108,39 @@
     }
   }
 
-  function GetGridAsArray() {
-    const grid_items = document.querySelectorAll('.grid__item');
-    let pattern = [];
-    grid_items.forEach((item) => {
-      pattern.push(item.getAttribute('data-val'));
-    });
-    return pattern;
-  }
-
+  /**
+   * Resets the current status of the patternArray.
+   */
   function ResetAll() {
-    let arr = ["e", "e", "dy", "e", "e", "dy", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "db", "e", "e", "e", "e", "e", "e", "db", "e", "e", "dy", "e", "e", "dy", "e", "e", "dg", "e", "e", "e", "e", "e", "e", "dr", "dg", "e", "e", "e", "e", "e", "e", "dr", "dg", "e", "e", "db", "db", "e", "e", "dr"];
-    PushToFirebase(arr);
+    let patternArr = [[0, 0, 0], [0, 0, 0], [255, 255, 0], [0, 0, 0], [0, 0, 0], [255, 255, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255], [0, 0, 0], [0, 0, 0], [255, 255, 0], [0, 0, 0], [0, 0, 0], [255, 255, 0], [0, 0, 0], [0, 0, 0], [0, 255, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255], [0, 0, 255], [0, 0, 0], [0, 0, 0], [255, 0, 0],];
+    PushToFirebase(patternArr);
   }
 
+  /**
+   * Loads the current pattern for the logged in user.
+   */
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       console.log('Logged in!');
-      firebase.database().ref(`domotica/${user.uid}`).on('value', (snapshot) => {
+      firebase.database().ref(`domotica/${user.uid}/pattern`).on('value', (snapshot) => {
         drawElements(snapshot.val());
+        patternArr = snapshot.val();
+        actions_container.style.display = 'block';
+        auth_container.style.display = 'none';
       });
     } else {
       console.log('Not logged in!');
+      auth_container.style.display = 'block';
+      actions_container.style.display = 'none';
+      clearGrid();
     }
   });
 
+  /**
+   * Signs up a user using firebase.
+   * @param {String} email 
+   * @param {String} password 
+   */
   function SignUp(email, password) {
     firebase.auth().createUserWithEmailAndPassword(email, password).then(() => {
       console.log('Successully signed up.');
@@ -121,6 +150,11 @@
     });
   }
 
+  /**
+   * Signs in a user using firebase.
+   * @param {String} email 
+   * @param {*String} password 
+   */
   function SignIn(email, password) {
     firebase.auth().signInWithEmailAndPassword(email, password).then(() => {
       console.log('Successfully logged in.')
@@ -129,6 +163,9 @@
     });
   }
 
+  /**
+   * Signs out the current logged in user.
+   */
   function SignOut() {
     firebase.auth().signOut().then(() => {
       console.log('Succesfully signed out.');
@@ -136,6 +173,9 @@
       console.log(error);
     });
   }
+  /**
+   * Attach all buttons to their corresponding functions.
+   */
 
   sign_in.addEventListener('click', (e) => {
     e.preventDefault();
@@ -155,6 +195,47 @@
   reset.addEventListener('click', (e) => {
     e.preventDefault();
     ResetAll();
-  })
+  });
+
+  room_1__light_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(2));
+  });
+
+  room_2__light_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(5));
+  });
+
+  room_3__light_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(34));
+  });
+
+  room_4__light_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(37));
+  });
+
+  room_1__outlet_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(24));
+  });
+
+  room_2__outlet_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(31));
+  });
+
+  room_3__outlet_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(59));
+  });
+
+  room_4__outlet_1.addEventListener('click', () => {
+    PushToFirebase(toggleElement(60));
+  });
+
+  room_3__door_1.addEventListener('click', () => {
+    PushToFirebase(toggleDoorElement([40, 48, 56]));
+  });
+
+  room_4__door_1.addEventListener('click', () => {
+    PushToFirebase(toggleDoorElement([47, 55, 63]));
+  });
 
 }());
+
