@@ -4,21 +4,13 @@ from firebase_admin import db as database
 from sense_hat import SenseHat
 from time import time, sleep
 import sys
+import os
 
-# constants
-e =  (0,0,0)
-dy = (255,255,0)
-ly = (128,128,0)
-db = (0,0,255)
-lb = (0,0,128)
-dg = (0,255,0)
-lg = (0,128,0)
-dr = (255,0,0)
-lr = (128,0,0)
 
 serviceAccountKey = '../../../../keys/serviceAccountKey.json'
 databaseURL = 'https://wot-1819-85183.firebaseio.com'
-#firebase_ref_new = ''
+TEMP_CORRECTION_FACTOR = 1.5
+firebase_ref_domotica = ''
 
 try:
     # Fetch the service account key JSON file contents
@@ -28,24 +20,54 @@ try:
     'databaseURL': databaseURL
     })
     # As an admin, the app has access to read and write all data
-    #firebase_ref_new = database.reference('new')
+    firebase_ref_domotica = database.reference('domotica/cf79X52JsAgOlXhA1TBktq0GA7T2')
     print('Firebase initialized!')
 except:
     print('Unable to initialize Firebase: {}'.format(sys.exc_info()[0]))
     sys.exit(1)
 
+# get the CPU temperature
+def get_cpu_temp():
+    res = os.popen('vcgencmd measure_temp').readline()
+    t = float(res.replace('temp=', '').replace("'C\n", ''))
+    return(t)
 
+# use moving average to smooth readings
+def get_smooth(x):
+  if not hasattr(get_smooth, "t"):
+    get_smooth.t = [x,x,x]
+  get_smooth.t[2] = get_smooth.t[1]
+  get_smooth.t[1] = get_smooth.t[0]
+  get_smooth.t[0] = x
+  xs = (get_smooth.t[0]+get_smooth.t[1]+get_smooth.t[2])/3
+  return(xs)
+
+# get the real temperature
+def get_temp(with_case):
+    temp_humidity = sense_hat.get_temperature_from_humidity()
+    temp_pressure = sense_hat.get_temperature_from_pressure()
+    temp = (temp_humidity + temp_pressure)/2
+    if with_case:
+        temp_cpu = get_cpu_temp()
+        temp_corrected = temp - ((temp_cpu - temp)/TEMP_CORRECTION_FACTOR)
+        temp_smooth = get_smooth(temp_corrected)
+    else:
+        temp_smooth = get_smooth(temp)
+    return(temp_smooth)
+
+def fetch_pattern(): 
+    domotica = firebase_ref_domotica.child('pattern').get()
+    sense_hat.set_pixels(domotica)
+
+def set_temp_hum(temp,hum):
+    firebase_ref_domotica.child('temp').set(temp)
+    firebase_ref_domotica.child('hum').set(hum)
 
 def main():
-    firebase_ref_domotica = database.reference('domotica/cf79X52JsAgOlXhA1TBktq0GA7T2')
     while True:
-        domotica = firebase_ref_domotica.get()
-        colors = []
-        for doms in domotica:
-            colors.append(eval(doms))
-        sense_hat.set_pixels(colors)
+        set_temp_hum(round(get_temp(True)),round(sense_hat.get_humidity()))
+        fetch_pattern()
         sleep(1)
-    
 
 try:
     # SenseHat

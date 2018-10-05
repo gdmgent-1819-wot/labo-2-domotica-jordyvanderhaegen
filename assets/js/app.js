@@ -25,12 +25,15 @@
   const room_4__outlet_1 = document.getElementById('room_4__outlet_1');
   const room_3__door_1 = document.getElementById('room_3__door_1');
   const room_4__door_1 = document.getElementById('room_4__door_1');
+  const temp_hum = document.getElementById('temp_hum');
   const email = document.getElementById('email');
   const password = document.getElementById('password');
   const grid = document.querySelector('.grid__wrapper');
   const auth_container = document.querySelector('.auth-container');
   const actions_container = document.querySelector('.actions-container');
   let patternArr = [];
+  let temp = '';
+  let hum = '';
 
   /**
    * Clears every child in the grid
@@ -122,9 +125,10 @@
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       console.log('Logged in!');
-      firebase.database().ref(`domotica/${user.uid}/pattern`).on('value', (snapshot) => {
-        drawElements(snapshot.val());
-        patternArr = snapshot.val();
+      firebase.database().ref(`domotica/${user.uid}`).on('value', (snapshot) => {
+        drawElements(snapshot.val().pattern);
+        patternArr = snapshot.val().pattern;
+        temp_hum.innerHTML = `${snapshot.val().temp}°C ${snapshot.val().hum}%`;
         actions_container.style.display = 'block';
         auth_container.style.display = 'none';
       });
