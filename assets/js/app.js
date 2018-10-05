@@ -32,8 +32,6 @@
   const auth_container = document.querySelector('.auth-container');
   const actions_container = document.querySelector('.actions-container');
   let patternArr = [];
-  let temp = '';
-  let hum = '';
 
   /**
    * Clears every child in the grid
@@ -43,6 +41,7 @@
       grid.removeChild(grid.firstChild);
     }
   }
+  
   /**
    * Changes the color of an element depending on the current state.
    * @param {Number} index 
@@ -177,6 +176,7 @@
       console.log(error);
     });
   }
+
   /**
    * Attach all buttons to their corresponding functions.
    */
